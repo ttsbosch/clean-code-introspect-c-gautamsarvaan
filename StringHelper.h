@@ -1,3 +1,4 @@
+#include <string.h>
 char** SplitString(const char* inputString, char delimiter) {
     int delimiterCount = 0;
     const char* ptr = inputString;
