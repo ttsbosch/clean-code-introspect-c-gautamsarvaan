@@ -1,3 +1,4 @@
+#include <string.h>
 bool TryConvertToInteger(const char* inputString, int* convertedValue) {
     char* endptr;
     *convertedValue = strtol(inputString, &endptr, 10);
@@ -7,7 +8,7 @@ bool TryConvertToInteger(const char* inputString, int* convertedValue) {
     return true;
 }
 
-int TryConvertToDouble(const char* inputString, double* convertedValue) {
+bool TryConvertToDouble(const char* inputString, double* convertedValue) {
     char* endpointer;
     *convertedValue = strtod(inputString, &endptr);
     if (endpointer == inputString) {
