@@ -1,4 +1,7 @@
 #include <string.h>
+#include <cstdlib>
+#include <stdlib.h>
+
 char** SplitString(const char* inputString, char delimiter) {
     int delimiterCount = 0;
     const char* ptr = inputString;
@@ -8,10 +11,10 @@ char** SplitString(const char* inputString, char delimiter) {
         }
     }
 
-    char** tokens = (char**)malloc(sizeof(char*) * (count + 2));
+    char** tokens = (char**)malloc(sizeof(char*) * (delimiterCount + 2));
     int row = 0;
-    ptr = str;
-    char* token = (char*)malloc(strlen(str) + 1);
+    ptr = inputString;
+    char* token = (char*)malloc(strlen(inputString) + 1);
     int column = 0;
     while (*ptr != '\0') {
         if (*ptr == delimiter) {
@@ -30,10 +33,10 @@ char** SplitString(const char* inputString, char delimiter) {
     return tokens;
 }
 
-int GetFromString(const char* str, int* value) {
+int GetFromString(const char* inputString, int* value) {
     char* endptr;
-    *value = strtol(str, &endptr, 10);
-    if (endptr == str) {
+    *value = strtol(inputString, &endptr, 10);
+    if (endptr == inputString) {
         return 0;
     }
     return 1;
