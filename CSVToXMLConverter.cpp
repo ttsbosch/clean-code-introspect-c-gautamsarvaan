@@ -36,10 +36,10 @@ void CovertTradeRecordFromCSVToXML(FILE* stream) {
             fprintf(stderr, "WARN: Trade price on line %d not a valid decimal: '%s'\n", lineCount + 1, fields[2]);
         }
 
-        strncpy(objects[objectCount].SourceCurrency, fields[0], 3);
-        strncpy(objects[objectCount].DestinationCurrency, fields[0] + 3, 3);
-        objects[objectCount].Lots = tradeAmount / LotSize;
-        objects[objectCount].Price = tradePrice;
+        strncpy(record[objectCount].SourceCurrency, fields[0], 3);
+        strncpy(record[objectCount].DestinationCurrency, fields[0] + 3, 3);
+        record[objectCount].Lots = tradeAmount / LotSize;
+        record[objectCount].Price = tradePrice;
         objectCount++;
         lineCount++;
     }
@@ -48,10 +48,10 @@ void CovertTradeRecordFromCSVToXML(FILE* stream) {
     fprintf(outFile, "<TradeRecords>\n");
     for (int index = 0; index < objectCount; index++) {
         fprintf(outFile, "\t<TradeRecord>\n");
-        fprintf(outFile, "\t\t<SourceCurrency>%s</SourceCurrency>\n", objects[index].SourceCurrency);
-        fprintf(outFile, "\t\t<DestinationCurrency>%s</DestinationCurrency>\n", objects[index].DestinationCurrency);
-        fprintf(outFile, "\t\t<Lots>%d</Lots>\n", objects[index].Lots);
-        fprintf(outFile, "\t\t<Price>%f</Price>\n", objects[index].Price);
+        fprintf(outFile, "\t\t<SourceCurrency>%s</SourceCurrency>\n", record[index].SourceCurrency);
+        fprintf(outFile, "\t\t<DestinationCurrency>%s</DestinationCurrency>\n", record[index].DestinationCurrency);
+        fprintf(outFile, "\t\t<Lots>%d</Lots>\n", record[index].Lots);
+        fprintf(outFile, "\t\t<Price>%f</Price>\n", record[index].Price);
         fprintf(outFile, "\t</TradeRecord>\n");
     }
     fprintf(outFile, "</TradeRecords>");
