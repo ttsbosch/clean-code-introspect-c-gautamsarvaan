@@ -1,4 +1,6 @@
 #include <string.h>
+#include <cstdlib>
+#include <stdlib.h>
 bool TryConvertToInteger(const char* inputString, int* convertedValue) {
     char* endptr;
     *convertedValue = strtol(inputString, &endptr, 10);
