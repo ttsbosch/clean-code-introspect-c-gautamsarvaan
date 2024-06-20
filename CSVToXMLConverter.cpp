@@ -5,6 +5,7 @@ void CovertTradeRecordFromCSVToXML(FILE* stream) {
     TradeRecord record[1024];
     int lineCount = 0;
     int objectCount = 0;
+    int LotSize = 3;
 
     while (fgets(line, sizeof(line), stream)) {
         char* fields[3];
