@@ -30,7 +30,7 @@ char** SplitString(const char* inputString, char delimiter) {
     return tokens;
 }
 
-int intGetFromString(const char* str, int* value) {
+int GetFromString(const char* str, int* value) {
     char* endptr;
     *value = strtol(str, &endptr, 10);
     if (endptr == str) {
