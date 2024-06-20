@@ -12,7 +12,7 @@ bool TryConvertToInteger(const char* inputString, int* convertedValue) {
 
 bool TryConvertToDouble(const char* inputString, double* convertedValue) {
     char* endpointer;
-    *convertedValue = strtod(inputString, &endptr);
+    *convertedValue = strtod(inputString, &endpointer);
     if (endpointer == inputString) {
         return 0;
     }
