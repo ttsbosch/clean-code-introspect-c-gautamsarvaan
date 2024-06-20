@@ -31,7 +31,7 @@ void CovertTradeRecordFromCSVToXML(FILE* stream) {
         }
 
         double tradePrice;
-        if (!ConvertToDouble(fields[2], &tradePrice)) {
+        if (!TryConvertToDouble(fields[2], &tradePrice)) {
             fprintf(stderr, "WARN: Trade price on line %d not a valid decimal: '%s'\n", lineCount + 1, fields[2]);
         }
 
