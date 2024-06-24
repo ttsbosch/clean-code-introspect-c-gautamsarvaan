@@ -4,7 +4,7 @@
 #include "CSVToXMLConverter.h"
 
 // Mock class
-class MockCSVToXMLConverter : public CSVToXMLConverter {
+class MockCSVToXMLConverter : public CovertTradeRecordFromCSVToXML  {
 public:
     MOCK_METHOD(int, GetFromString, (const char* inputString, int* value), (override));
     MOCK_METHOD(std::string, SplitString, (const char* inputString, char delimiter), (override));
