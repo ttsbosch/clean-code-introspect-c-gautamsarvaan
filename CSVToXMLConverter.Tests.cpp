@@ -1,5 +1,6 @@
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
+#include "StringHelper.h"
 #include "CSVToXMLConverter.h"
 
 // Mock class
@@ -11,7 +12,7 @@ public:
 
 // Test case for Coordinator::processData
 TEST(CSVToXMLConverterTest, ProcessDataTest) {
-    CSVToXMLConverter CSVToXMLConverter;
+    MockCSVToXMLConverter CSVToXMLConverter;
 
     // Set expectations for the mock methods
 
