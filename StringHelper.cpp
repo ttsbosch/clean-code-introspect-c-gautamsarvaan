@@ -6,7 +6,7 @@ char** SplitString(const char* inputString, char delimiter) {
     int delimiterCount = 0;
     const char* ptr = inputString;
     while (*ptr != '\0') {
-        if (*ptr++ == delimiterCount) {
+        if (*ptr++ == delimiter) {
             delimiterCount++;
         }
     }
