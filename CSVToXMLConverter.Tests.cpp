@@ -21,12 +21,12 @@ public:
 namespace {
     MockConverter* g_mockConverter = nullptr;
 
-    // Redirect the calls to the mock methods
-    bool MockedGetFromString(const char* str, int* out) {
+    // Mock implementations
+    bool GetFromString(const char* str, int* out) {
         return g_mockConverter->GetFromString(str, out);
     }
 
-    bool MockedTryConvertToDouble(const char* str, double* out) {
+    bool TryConvertToDouble(const char* str, double* out) {
         return g_mockConverter->TryConvertToDouble(str, out);
     }
 }
@@ -49,7 +49,7 @@ protected:
 
         // Redirect stdout to a string
         testing::internal::CaptureStdout();
-        CovertTradeRecordFromCSVToXML(tempFile, MockedGetFromString, MockedTryConvertToDouble);
+        CovertTradeRecordFromCSVToXML(tempFile);
         std::string output = testing::internal::GetCapturedStdout();
 
         // Close the temporary file
