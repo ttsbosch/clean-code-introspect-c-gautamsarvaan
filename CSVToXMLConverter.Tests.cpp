@@ -18,15 +18,17 @@ public:
     MOCK_METHOD(bool, TryConvertToDouble, (const char*, double*));
 };
 
-MockConverter* g_mockConverter = nullptr;
+namespace {
+    MockConverter* g_mockConverter = nullptr;
 
-// Redirect the calls to the mock methods
-bool GetFromString(const char* str, int* out) {
-    return g_mockConverter->GetFromString(str, out);
-}
+    // Redirect the calls to the mock methods
+    bool MockedGetFromString(const char* str, int* out) {
+        return g_mockConverter->GetFromString(str, out);
+    }
 
-bool TryConvertToDouble(const char* str, double* out) {
-    return g_mockConverter->TryConvertToDouble(str, out);
+    bool MockedTryConvertToDouble(const char* str, double* out) {
+        return g_mockConverter->TryConvertToDouble(str, out);
+    }
 }
 
 class CSVToXMLConverterTest : public ::testing::Test {
@@ -39,7 +41,7 @@ protected:
         g_mockConverter = nullptr;
     }
 
-    void TestCSVInput(const char* input, const char* expectedOutput) {
+    void TestCSVInput(const char* input, const char* expectedOutputXML, const std::string& expectedConsoleOutput) {
         // Create a temporary file
         FILE* tempFile = tmpfile();
         fprintf(tempFile, "%s", input);
@@ -47,7 +49,7 @@ protected:
 
         // Redirect stdout to a string
         testing::internal::CaptureStdout();
-        CovertTradeRecordFromCSVToXML(tempFile);
+        CovertTradeRecordFromCSVToXML(tempFile, MockedGetFromString, MockedTryConvertToDouble);
         std::string output = testing::internal::GetCapturedStdout();
 
         // Close the temporary file
@@ -58,12 +60,12 @@ protected:
         std::stringstream buffer;
         buffer << outFile.rdbuf();
         outFile.close();
-        
-        // Check if the output matches the expected output
-        ASSERT_EQ(output, "INFO: 2 trades processed\n");
+
+        // Check if the console output matches the expected output
+        ASSERT_EQ(output, expectedConsoleOutput);
 
         // Check if the output XML matches the expected XML
-        ASSERT_EQ(buffer.str(), expectedOutput);
+        ASSERT_EQ(buffer.str(), expectedOutputXML);
     }
 
     MockConverter mockConverter;
@@ -76,7 +78,7 @@ TEST_F(CSVToXMLConverterTest, ValidInput) {
         .WillRepeatedly(DoAll(SetArgPointee<1>(110.25), Return(true)));
 
     const char* input = "USDJPY,100,110.25\nEURUSD,200,1.2\n";
-    const char* expectedOutput = 
+    const char* expectedOutputXML = 
         "<TradeRecords>\n"
         "\t<TradeRecord>\n"
         "\t\t<SourceCurrency>USD</SourceCurrency>\n"
@@ -91,16 +93,18 @@ TEST_F(CSVToXMLConverterTest, ValidInput) {
         "\t\t<Price>1.200000</Price>\n"
         "\t</TradeRecord>\n"
         "</TradeRecords>\n";
+    const std::string expectedConsoleOutput = "INFO: 2 trades processed\n";
 
-    TestCSVInput(input, expectedOutput);
+    TestCSVInput(input, expectedOutputXML, expectedConsoleOutput);
 }
 
 TEST_F(CSVToXMLConverterTest, MalformedLine) {
     const char* input = "USDJPY,100\n";
-    const char* expectedOutput = 
+    const char* expectedOutputXML = "<TradeRecords>\n</TradeRecords>\n";
+    const std::string expectedConsoleOutput = 
         "WARN: Line 1 malformed. Only 2 field(s) found.\nINFO: 0 trades processed\n";
 
-    TestCSVInput(input, expectedOutput);
+    TestCSVInput(input, expectedOutputXML, expectedConsoleOutput);
 }
 
 TEST_F(CSVToXMLConverterTest, InvalidTradeAmount) {
@@ -108,10 +112,11 @@ TEST_F(CSVToXMLConverterTest, InvalidTradeAmount) {
         .WillRepeatedly(Return(false));
 
     const char* input = "USDJPY,abc,110.25\n";
-    const char* expectedOutput = 
+    const char* expectedOutputXML = "<TradeRecords>\n</TradeRecords>\n";
+    const std::string expectedConsoleOutput = 
         "WARN: Trade amount on line 1 not a valid integer: 'abc'\nINFO: 0 trades processed\n";
 
-    TestCSVInput(input, expectedOutput);
+    TestCSVInput(input, expectedOutputXML, expectedConsoleOutput);
 }
 
 TEST_F(CSVToXMLConverterTest, InvalidTradePrice) {
@@ -119,18 +124,20 @@ TEST_F(CSVToXMLConverterTest, InvalidTradePrice) {
         .WillRepeatedly(Return(false));
 
     const char* input = "USDJPY,100,abc\n";
-    const char* expectedOutput = 
+    const char* expectedOutputXML = "<TradeRecords>\n</TradeRecords>\n";
+    const std::string expectedConsoleOutput = 
         "WARN: Trade price on line 1 not a valid decimal: 'abc'\nINFO: 0 trades processed\n";
 
-    TestCSVInput(input, expectedOutput);
+    TestCSVInput(input, expectedOutputXML, expectedConsoleOutput);
 }
 
 TEST_F(CSVToXMLConverterTest, MalformedTradeCurrencies) {
     const char* input = "USD,100,110.25\n";
-    const char* expectedOutput = 
+    const char* expectedOutputXML = "<TradeRecords>\n</TradeRecords>\n";
+    const std::string expectedConsoleOutput = 
         "WARN: Trade currencies on line 1 malformed: 'USD'\nINFO: 0 trades processed\n";
 
-    TestCSVInput(input, expectedOutput);
+    TestCSVInput(input, expectedOutputXML, expectedConsoleOutput);
 }
 
 int main(int argc, char **argv) {
