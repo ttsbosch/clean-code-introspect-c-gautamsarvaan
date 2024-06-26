@@ -4,6 +4,7 @@
 #include <cstring>
 #include <fstream>
 #include <sstream>
+#include "CSVToXMLConverter.h"
 
 using ::testing::_;
 using ::testing::Return;
