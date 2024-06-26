@@ -1,7 +1,7 @@
 #include <gtest/gtest.h>
-#include <gmock/gmock.h>
+#include <cstdio>
 #include <cstring>
-#include "CSVToXMLConverter.h"
+#include <sstream>
 
 // Mocking the functions GetFromString and TryConvertToDouble
 bool GetFromString(const char* str, int* out) {
@@ -33,23 +33,50 @@ protected:
     }
 
     void TestCSVInput(const char* input, const char* expectedOutput) {
-        // Prepare the input stream
-        std::istringstream inputStream(input);
+        // Create a temporary file
+        FILE* tempFile = tmpfile();
+        fprintf(tempFile, "%s", input);
+        rewind(tempFile);
 
         // Redirect stdout to a string
         testing::internal::CaptureStdout();
-        CovertTradeRecordFromCSVToXML(inputStream);
+        CovertTradeRecordFromCSVToXML(tempFile);
         std::string output = testing::internal::GetCapturedStdout();
 
+        // Close the temporary file
+        fclose(tempFile);
+
+        // Read the output XML file
+        std::ifstream outFile("output.xml");
+        std::stringstream buffer;
+        buffer << outFile.rdbuf();
+        outFile.close();
+        
         // Check if the output matches the expected output
         ASSERT_EQ(output, expectedOutput);
+
+        // Check if the output XML matches the expected XML
+        ASSERT_EQ(buffer.str(), expectedOutput);
     }
 };
 
 TEST_F(CSVToXMLConverterTest, ValidInput) {
     const char* input = "USDJPY,100,110.25\nEURUSD,200,1.2\n";
     const char* expectedOutput = 
-        "INFO: 2 trades processed\n";
+        "<TradeRecords>\n"
+        "\t<TradeRecord>\n"
+        "\t\t<SourceCurrency>USD</SourceCurrency>\n"
+        "\t\t<DestinationCurrency>JPY</DestinationCurrency>\n"
+        "\t\t<Lots>33</Lots>\n"
+        "\t\t<Price>110.250000</Price>\n"
+        "\t</TradeRecord>\n"
+        "\t<TradeRecord>\n"
+        "\t\t<SourceCurrency>EUR</SourceCurrency>\n"
+        "\t\t<DestinationCurrency>USD</DestinationCurrency>\n"
+        "\t\t<Lots>66</Lots>\n"
+        "\t\t<Price>1.200000</Price>\n"
+        "\t</TradeRecord>\n"
+        "</TradeRecords>\n";
 
     TestCSVInput(input, expectedOutput);
 }
