@@ -2,6 +2,7 @@
 #include <cstdio>
 #include <cstring>
 #include <sstream>
+#include <fstream>
 #include "CSVToXMLConverter.h"
 
 // Mocking the functions GetFromString and TryConvertToDouble
