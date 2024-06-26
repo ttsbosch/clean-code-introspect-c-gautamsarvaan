@@ -1,26 +1,88 @@
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
-#include "StringHelper.h"
-#include "CSVToXMLConverter.h"
+#include <cstring>
 
-// Mock class
-class MockCSVToXMLConverter : public CovertTradeRecordFromCSVToXML  {
-public:
-    MOCK_METHOD(int, GetFromString, (const char* inputString, int* value), (override));
-    MOCK_METHOD(std::string, SplitString, (const char* inputString, char delimiter), (override));
+// Mocking the functions GetFromString and TryConvertToDouble
+bool GetFromString(const char* str, int* out) {
+    try {
+        *out = std::stoi(str);
+        return true;
+    } catch (...) {
+        return false;
+    }
+}
+
+bool TryConvertToDouble(const char* str, double* out) {
+    try {
+        *out = std::stod(str);
+        return true;
+    } catch (...) {
+        return false;
+    }
+}
+
+class CSVToXMLConverterTest : public ::testing::Test {
+protected:
+    virtual void SetUp() {
+        // Set up initializations here if needed
+    }
+
+    virtual void TearDown() {
+        // Clean up here if needed
+    }
+
+    void TestCSVInput(const char* input, const char* expectedOutput) {
+        // Prepare the input stream
+        std::istringstream inputStream(input);
+
+        // Redirect stdout to a string
+        testing::internal::CaptureStdout();
+        CovertTradeRecordFromCSVToXML(inputStream);
+        std::string output = testing::internal::GetCapturedStdout();
+
+        // Check if the output matches the expected output
+        ASSERT_EQ(output, expectedOutput);
+    }
 };
 
-// Test case for Coordinator::processData
-TEST(CSVToXMLConverterTest, ProcessDataTest) {
-    MockCSVToXMLConverter CSVToXMLConverter;
+TEST_F(CSVToXMLConverterTest, ValidInput) {
+    const char* input = "USDJPY,100,110.25\nEURUSD,200,1.2\n";
+    const char* expectedOutput = 
+        "INFO: 2 trades processed\n";
 
-    // Set expectations for the mock methods
+    TestCSVInput(input, expectedOutput);
+}
 
+TEST_F(CSVToXMLConverterTest, MalformedLine) {
+    const char* input = "USDJPY,100\n";
+    const char* expectedOutput = 
+        "WARN: Line 1 malformed. Only 2 field(s) found.\nINFO: 0 trades processed\n";
 
-    // Execute the coordinator function
+    TestCSVInput(input, expectedOutput);
+}
 
+TEST_F(CSVToXMLConverterTest, InvalidTradeAmount) {
+    const char* input = "USDJPY,abc,110.25\n";
+    const char* expectedOutput = 
+        "WARN: Trade amount on line 1 not a valid integer: 'abc'\nINFO: 0 trades processed\n";
 
-    // Verify the result
+    TestCSVInput(input, expectedOutput);
+}
+
+TEST_F(CSVToXMLConverterTest, InvalidTradePrice) {
+    const char* input = "USDJPY,100,abc\n";
+    const char* expectedOutput = 
+        "WARN: Trade price on line 1 not a valid decimal: 'abc'\nINFO: 0 trades processed\n";
+
+    TestCSVInput(input, expectedOutput);
+}
+
+TEST_F(CSVToXMLConverterTest, MalformedTradeCurrencies) {
+    const char* input = "USD,100,110.25\n";
+    const char* expectedOutput = 
+        "WARN: Trade currencies on line 1 malformed: 'USD'\nINFO: 0 trades processed\n";
+
+    TestCSVInput(input, expectedOutput);
 }
 
 int main(int argc, char **argv) {
