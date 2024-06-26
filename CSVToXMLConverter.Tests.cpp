@@ -1,6 +1,7 @@
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
 #include <cstring>
+#include "CSVToXMLConverter.h"
 
 // Mocking the functions GetFromString and TryConvertToDouble
 bool GetFromString(const char* str, int* out) {
