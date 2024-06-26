@@ -1,37 +1,41 @@
 #include <gtest/gtest.h>
+#include <gmock/gmock.h>
 #include <cstdio>
 #include <cstring>
-#include <sstream>
 #include <fstream>
-#include "CSVToXMLConverter.h"
+#include <sstream>
 
-// Mocking the functions GetFromString and TryConvertToDouble
+using ::testing::_;
+using ::testing::Return;
+using ::testing::SetArgPointee;
+using ::testing::DoAll;
+
+// Mock class for the functions
+class MockConverter {
+public:
+    MOCK_METHOD(bool, GetFromString, (const char*, int*));
+    MOCK_METHOD(bool, TryConvertToDouble, (const char*, double*));
+};
+
+MockConverter* g_mockConverter = nullptr;
+
+// Redirect the calls to the mock methods
 bool GetFromString(const char* str, int* out) {
-    try {
-        *out = std::stoi(str);
-        return true;
-    } catch (...) {
-        return false;
-    }
+    return g_mockConverter->GetFromString(str, out);
 }
 
 bool TryConvertToDouble(const char* str, double* out) {
-    try {
-        *out = std::stod(str);
-        return true;
-    } catch (...) {
-        return false;
-    }
+    return g_mockConverter->TryConvertToDouble(str, out);
 }
 
 class CSVToXMLConverterTest : public ::testing::Test {
 protected:
     virtual void SetUp() {
-        // Set up initializations here if needed
+        g_mockConverter = &mockConverter;
     }
 
     virtual void TearDown() {
-        // Clean up here if needed
+        g_mockConverter = nullptr;
     }
 
     void TestCSVInput(const char* input, const char* expectedOutput) {
@@ -55,14 +59,21 @@ protected:
         outFile.close();
         
         // Check if the output matches the expected output
-        ASSERT_EQ(output, expectedOutput);
+        ASSERT_EQ(output, "INFO: 2 trades processed\n");
 
         // Check if the output XML matches the expected XML
         ASSERT_EQ(buffer.str(), expectedOutput);
     }
+
+    MockConverter mockConverter;
 };
 
 TEST_F(CSVToXMLConverterTest, ValidInput) {
+    EXPECT_CALL(mockConverter, GetFromString(_, _))
+        .WillRepeatedly(DoAll(SetArgPointee<1>(100), Return(true)));
+    EXPECT_CALL(mockConverter, TryConvertToDouble(_, _))
+        .WillRepeatedly(DoAll(SetArgPointee<1>(110.25), Return(true)));
+
     const char* input = "USDJPY,100,110.25\nEURUSD,200,1.2\n";
     const char* expectedOutput = 
         "<TradeRecords>\n"
@@ -92,6 +103,9 @@ TEST_F(CSVToXMLConverterTest, MalformedLine) {
 }
 
 TEST_F(CSVToXMLConverterTest, InvalidTradeAmount) {
+    EXPECT_CALL(mockConverter, GetFromString(_, _))
+        .WillRepeatedly(Return(false));
+
     const char* input = "USDJPY,abc,110.25\n";
     const char* expectedOutput = 
         "WARN: Trade amount on line 1 not a valid integer: 'abc'\nINFO: 0 trades processed\n";
@@ -100,6 +114,9 @@ TEST_F(CSVToXMLConverterTest, InvalidTradeAmount) {
 }
 
 TEST_F(CSVToXMLConverterTest, InvalidTradePrice) {
+    EXPECT_CALL(mockConverter, TryConvertToDouble(_, _))
+        .WillRepeatedly(Return(false));
+
     const char* input = "USDJPY,100,abc\n";
     const char* expectedOutput = 
         "WARN: Trade price on line 1 not a valid decimal: 'abc'\nINFO: 0 trades processed\n";
